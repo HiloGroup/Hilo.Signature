@@ -1,0 +1,32 @@
+name: Auto Release ZIP
+
+on:
+  push:
+    branches:
+      - PublishHttps
+      - PublishHttp
+      - PublishAll
+
+jobs:
+  create-release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zip EXE
+        run: |
+        
+          Compress-Archive -Path ./HiloPlugin.exe -DestinationPath ./HiloPlugin-${{ github.ref_name }}.zip
+        # Giả sử HiloSignature.exe đã được push lên repo trong nhánh
+
+      - name: Update Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name == 'PublishHttps' && 'https-latest' || github.ref_name == 'PublishHttp' && 'http-latest' || 'all-latest' }}
+          files: HiloSignature-${{ github.ref_name }}.zip
+          name: Latest ${{ github.ref_name }} Build
+          body: Auto-updated release for ${{ github.ref_name }}
+          target_commitish: ${{ github.sha }}
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
