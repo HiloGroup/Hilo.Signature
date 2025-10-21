@@ -15,16 +15,19 @@ jobs:
 
       - name: Zip EXE
         run: |
-        
-          Compress-Archive -Path ./HiloPlugin.exe -DestinationPath ./HiloPlugin-${{ github.ref_name }}.zip
-        # Giả sử HiloSignature.exe đã được push lên repo trong nhánh
+          if (Test-Path ./HiloPlugin.exe) {
+            Compress-Archive -Path ./HiloPlugin.exe -DestinationPath ./HiloPlugin-${{ github.ref_name }}.zip
+          } else {
+            echo "HiloPlugin.exe not found!"
+            exit 1
+          }
 
       - name: Update Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name == 'PublishHttps' && 'https-latest' || github.ref_name == 'PublishHttp' && 'http-latest' || 'all-latest' }}
-          files: HiloSignature-${{ github.ref_name }}.zip
-          name: Latest ${{ github.ref_name }} Build
+          files: ./HiloPlugin.zip  # Sửa lại tên file zip cho khớp
+          name: Latest Build
           body: Auto-updated release for ${{ github.ref_name }}
           target_commitish: ${{ github.sha }}
           prerelease: false
