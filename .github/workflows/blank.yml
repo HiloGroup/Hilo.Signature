@@ -15,7 +15,9 @@ jobs:
 
       - name: Check EXE Existence
         run: |
-          if (-Not (Test-Path ./HiloPlugin.exe)) {
+          if (Test-Path ./HiloPlugin.exe) {
+            Compress-Archive -Path ./HiloPlugin.exe -DestinationPath ./HiloPlugin.zip
+          } else {
             echo "HiloPlugin.exe not found!"
             exit 1
           }
@@ -24,7 +26,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name == 'PublishHttps' && 'https-latest' || github.ref_name == 'PublishHttp' && 'http-latest' || 'all-latest' }}
-          files: ./HiloPlugin.exe
+          files: ./HiloPlugin.zip
           name: Latest Build ${{ github.ref_name }}
           body: Auto-updated release for ${{ github.ref_name }}
           target_commitish: ${{ github.sha }}
