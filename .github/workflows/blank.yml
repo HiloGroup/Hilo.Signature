@@ -16,7 +16,7 @@ jobs:
       - name: Check EXE Existence
         run: |
           if (Test-Path ./HiloPlugin.exe) {
-            Compress-Archive -Path ./HiloPlugin.exe -DestinationPath ./HiloPlugin.zip
+          
           } else {
             echo "HiloPlugin.exe not found!"
             exit 1
