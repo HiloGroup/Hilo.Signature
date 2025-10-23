@@ -30,8 +30,8 @@ jobs:
         with:
           tag_name: ${{ github.ref_name == 'PublishHttps' && 'https-latest' || github.ref_name == 'PublishHttp' && 'http-latest' || 'all-latest' }}
           files: |
-      ./HiloPlugin.zip
-      ./HiloPlugin.exe
+            ./HiloPlugin.zip
+            ./HiloPlugin.exe
           name: Latest Build ${{ github.ref_name }}
           body: Auto-updated release for ${{ github.ref_name }}
           target_commitish: ${{ github.sha }}
