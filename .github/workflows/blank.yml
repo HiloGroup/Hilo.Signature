@@ -1,4 +1,4 @@
-name: Auto Release EXE
+name: Auto Release ZIP
 
 on:
   push:
@@ -13,10 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check EXE Existence
+      - name: Zip EXE
         run: |
           if (Test-Path ./HiloPlugin.exe) {
-          
+            Compress-Archive -Path ./HiloPlugin.exe -DestinationPath ./HiloPlugin.zip
           } else {
             echo "HiloPlugin.exe not found!"
             exit 1
@@ -26,11 +26,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name == 'PublishHttps' && 'https-latest' || github.ref_name == 'PublishHttp' && 'http-latest' || 'all-latest' }}
-          files: ./HiloPlugin.zip
+          files: ./HiloPlugin.zip  # Sửa lại tên file zip cho khớp
           name: Latest Build ${{ github.ref_name }}
           body: Auto-updated release for ${{ github.ref_name }}
           target_commitish: ${{ github.sha }}
           prerelease: false
-          generate_release_notes: false  # Ngăn tạo release notes và source code archives
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
