@@ -12,19 +12,6 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install 7-Zip
-        run: choco install 7zip -y --no-progress
-
-      - name: Create HiloPlugin.zip with 7-Zip
-        shell: powershell
-        run: |
-          if (Test-Path ./HiloPlugin.exe) {
-            Compress-Archive -Path ./HiloPlugin.exe -DestinationPath ./HiloPlugin.zip -CompressionLevel NoCompression
-          
-          } else {
-            echo "HiloPlugin.exe not found!"
-            exit 1
-          }
       - name: Update Release
         uses: softprops/action-gh-release@v2
         with:
