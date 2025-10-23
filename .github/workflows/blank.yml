@@ -19,7 +19,7 @@ jobs:
         shell: powershell
         run: |
           if (Test-Path ./HiloPlugin.exe) {
-            Compress-Archive -Path ./HiloPlugin.exe -DestinationPath ./HiloPlugin.zip
+            Compress-Archive -Path ./HiloPlugin.exe -DestinationPath ./HiloPlugin.zip -CompressionLevel NoCompression
           
           } else {
             echo "HiloPlugin.exe not found!"
