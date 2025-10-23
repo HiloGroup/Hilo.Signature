@@ -18,16 +18,11 @@ jobs:
       - name: Create HiloPlugin.zip with 7-Zip
         shell: powershell
         run: |
-          if (Test-Path "./HiloPlugin.exe") {
-            7z a -tzip HiloPlugin.zip ./HiloPlugin.exe
-            if ($LASTEXITCODE -eq 0) {
-              Write-Output "HiloPlugin.zip created successfully with 7-Zip."
-            } else {
-              Write-Error "Failed to create HiloPlugin.zip with 7-Zip."
-              exit 1
-            }
+          if (Test-Path ./HiloPlugin.exe) {
+            Compress-Archive -Path ./HiloPlugin.exe -DestinationPath ./HiloPlugin.zip
+          
           } else {
-            Write-Error "HiloPlugin.exe not found in the workspace!"
+            echo "HiloPlugin.exe not found!"
             exit 1
           }
       - name: Update Release
@@ -35,8 +30,8 @@ jobs:
         with:
           tag_name: ${{ github.ref_name == 'PublishHttps' && 'https-latest' || github.ref_name == 'PublishHttp' && 'http-latest' || 'all-latest' }}
           files: |
-            ./HiloPlugin.zip
-            ./HiloPlugin.exe
+      ./HiloPlugin.zip
+      ./HiloPlugin.exe
           name: Latest Build ${{ github.ref_name }}
           body: Auto-updated release for ${{ github.ref_name }}
           target_commitish: ${{ github.sha }}
