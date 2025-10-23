@@ -1,4 +1,4 @@
-name: Auto Release ZIP
+name: Auto Release EXE
 
 on:
   push:
@@ -12,24 +12,35 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install 7-Zip
+        run: choco install 7zip -y --no-progress
 
-      - name: Zip EXE
+      - name: Create HiloPlugin.zip with 7-Zip
+        shell: powershell
         run: |
-          if (Test-Path ./HiloPlugin.exe) {
-            Compress-Archive -Path ./HiloPlugin.exe -DestinationPath ./HiloPlugin.zip
+          if (Test-Path "./HiloPlugin.exe") {
+            7z a -tzip HiloPlugin.zip ./HiloPlugin.exe
+            if ($LASTEXITCODE -eq 0) {
+              Write-Output "HiloPlugin.zip created successfully with 7-Zip."
+            } else {
+              Write-Error "Failed to create HiloPlugin.zip with 7-Zip."
+              exit 1
+            }
           } else {
-            echo "HiloPlugin.exe not found!"
+            Write-Error "HiloPlugin.exe not found in the workspace!"
             exit 1
           }
-
       - name: Update Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name == 'PublishHttps' && 'https-latest' || github.ref_name == 'PublishHttp' && 'http-latest' || 'all-latest' }}
-          files: ./HiloPlugin.zip  # Sửa lại tên file zip cho khớp
+          files: |
+      ./HiloPlugin.zip
+      ./HiloPlugin.exe
           name: Latest Build ${{ github.ref_name }}
           body: Auto-updated release for ${{ github.ref_name }}
           target_commitish: ${{ github.sha }}
           prerelease: false
+          generate_release_notes: false  # Ngăn tạo release notes và source code archives
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
