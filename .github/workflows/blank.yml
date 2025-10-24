@@ -8,13 +8,12 @@ on:
       - PublishAll
 
 jobs:
-  scan-and-release:
-    name: Release
-    runs-on: ubuntu-latest
+  create-release:
+    runs-on: windows-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Update Release
         uses: softprops/action-gh-release@v2
-        if: success()
         with:
           tag_name: ${{ github.ref_name == 'PublishHttps' && 'https-latest' || github.ref_name == 'PublishHttp' && 'http-latest' || 'all-latest' }}
           files: |
@@ -24,6 +23,6 @@ jobs:
           body: Auto-updated release for ${{ github.ref_name }}
           target_commitish: ${{ github.sha }}
           prerelease: false
-          generate_release_notes: false
+          generate_release_notes: false  # Ngăn tạo release notes và source code archives
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
