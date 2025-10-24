@@ -12,8 +12,23 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Scan ZIP and EXE with Windows Defender
+        run: |
+          $zipScan = Start-MpScan -ScanType CustomScan -ScanPath "./HiloPlugin.zip" -ErrorAction Stop
+          $exeScan = Start-MpScan -ScanType CustomScan -ScanPath "./HiloPlugin.exe" -ErrorAction Stop
+          $threats = Get-MpThreat
+          if ($threats) {
+            Write-Error "Virus detected! Threats found: $threats"
+            exit 1
+          } else {
+            Write-Output "No threats detected."
+          }
+        shell: powershell
+
       - name: Update Release
         uses: softprops/action-gh-release@v2
+        if: success() # Chỉ chạy nếu scan pass
         with:
           tag_name: ${{ github.ref_name == 'PublishHttps' && 'https-latest' || github.ref_name == 'PublishHttp' && 'http-latest' || 'all-latest' }}
           files: |
@@ -23,6 +38,6 @@ jobs:
           body: Auto-updated release for ${{ github.ref_name }}
           target_commitish: ${{ github.sha }}
           prerelease: false
-          generate_release_notes: false  # Ngăn tạo release notes và source code archives
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
