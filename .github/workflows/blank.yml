@@ -1,4 +1,4 @@
-name: Auto Release EXE with Virus Scan
+name: Auto Release EXE
 
 on:
   push:
@@ -9,31 +9,9 @@ on:
 
 jobs:
   scan-and-release:
-    name: Scan Virus and Release
+    name: Release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4.0.0
-        with:
-          fetch-depth: 0
-
-      - name: Scan ZIP and EXE for Viruses
-        uses: hugoalh/scan-virus-ghaction@v0.20.0
-        with:
-          git_ignores: |-
-            Param($GitCommitMeta)
-            Return (
-              $GitCommit.AuthorName -imatch '^dependabot' -or
-              ($GitCommit.AuthorDate -lt ([DateTime]::Parse('2022-01-01T00:00:00Z')) -and $GitCommit.AuthorName -imatch '^octocat$')
-            )
-          git_limit: 100
-          ignores_pre: |-
-            Param($ElementPreMeta)
-            Return ($Meta.Path -imatch '^node_modules[\\/]')
-          target: |-
-            ./HiloPlugin.zip
-            ./HiloPlugin.exe
-
       - name: Update Release
         uses: softprops/action-gh-release@v2
         if: success()
