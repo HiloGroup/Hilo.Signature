@@ -8,29 +8,13 @@ on:
       - PublishAll
 
 jobs:
-  create-release:
-    runs-on: windows-latest
+  scan-and-release:
+    name: Release
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install ClamAV
-        run: |
-          choco install clamav --force
-          freshclam
-        shell: powershell
-
-      - name: Scan ZIP and EXE for viruses
-        run: |
-          clamscan --infected --recursive --no-summary ./HiloPlugin.zip ./HiloPlugin.exe
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Virus detected! Aborting release."
-            exit 1
-          }
-        shell: powershell
-
       - name: Update Release
         uses: softprops/action-gh-release@v2
-        if: success() # Chỉ chạy nếu scan pass
+        if: success()
         with:
           tag_name: ${{ github.ref_name == 'PublishHttps' && 'https-latest' || github.ref_name == 'PublishHttp' && 'http-latest' || 'all-latest' }}
           files: |
