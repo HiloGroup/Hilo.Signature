@@ -13,16 +13,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Scan ZIP and EXE with Windows Defender
+      - name: Install ClamAV
         run: |
-          $zipScan = Start-MpScan -ScanType CustomScan -ScanPath "./HiloPlugin.zip" -ErrorAction Stop
-          $exeScan = Start-MpScan -ScanType CustomScan -ScanPath "./HiloPlugin.exe" -ErrorAction Stop
-          $threats = Get-MpThreat
-          if ($threats) {
-            Write-Error "Virus detected! Threats found: $threats"
+          choco install clamav --force
+          freshclam
+        shell: powershell
+
+      - name: Scan ZIP and EXE for viruses
+        run: |
+          clamscan --infected --recursive --no-summary ./HiloPlugin.zip ./HiloPlugin.exe
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Virus detected! Aborting release."
             exit 1
-          } else {
-            Write-Output "No threats detected."
           }
         shell: powershell
 
