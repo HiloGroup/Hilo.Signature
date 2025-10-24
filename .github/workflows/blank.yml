@@ -2,54 +2,20 @@ name: Auto Release EXE
 
 on:
   push:
-    branches: [ PublishHttps, PublishHttp, PublishAll ]
-
-permissions:
-  contents: write  # cần để push tag và tạo release
+    branches:
+      - PublishHttps
+      - PublishHttp
+      - PublishAll
 
 jobs:
   create-release:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
-      # Quyết định tên tag theo nhánh
-      - name: Decide tag
-        id: tag
-        shell: pwsh
-        run: |
-          $b = "${{ github.ref_name }}"
-          switch ($b) {
-            "PublishHttps" { $tag="https-latest"; break }
-            "PublishHttp"  { $tag="http-latest"; break }
-            default        { $tag="all-latest" }
-          }
-          "tag_name=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
-      # Import GPG key
-      - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
-          git_user_signingkey: true
-          git_commit_gpgsign: true
-
-      # Ký và push tag (nếu chưa có), hoặc re-sign (force) nếu cần
-      - name: Create signed tag
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          set TAG=${{ steps.tag.outputs.tag_name }}
-          # tạo/ghi đè tag có ký GPG
-          git tag -s "%TAG%" -m "%TAG%" || (git tag -d "%TAG%" && git tag -s "%TAG%" -m "%TAG%")
-          git push --force origin "%TAG%"
-
-      # Tạo/cập nhật release dùng tag đã ký
       - name: Update Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.tag.outputs.tag_name }}
+          tag_name: ${{ github.ref_name == 'PublishHttps' && 'https-latest' || github.ref_name == 'PublishHttp' && 'http-latest' || 'all-latest' }}
           files: |
             ./HiloPlugin.zip
             ./HiloPlugin.exe
@@ -57,6 +23,6 @@ jobs:
           body: Auto-updated release for ${{ github.ref_name }}
           target_commitish: ${{ github.sha }}
           prerelease: false
-          generate_release_notes: false
+          generate_release_notes: false  # Ngăn tạo release notes và source code archives
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
