@@ -1,4 +1,4 @@
-name: Auto Release EXE
+name: Auto Release EXE with Virus Scan
 
 on:
   push:
@@ -8,42 +8,35 @@ on:
       - PublishAll
 
 jobs:
-  create-release:
-    runs-on: windows-latest
+  scan-and-release:
+    name: Scan Virus and Release
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4.0.0
+        with:
+          fetch-depth: 0
 
-      - name: Install ClamAV and Get Config Path
-        run: |
-          # Cài đặt ClamAV
-          choco install clamav --force
-          
-          # Tìm đường dẫn chính xác đến thư mục ClamAV được cài đặt
-          $ClamAVDir = Get-ChildItem -Path C:\ProgramData\Chocolatey\lib\clamav\tools | Select-Object -ExpandProperty FullName
-          
-          # Tạo một tệp cấu hình tạm thời (freshclam.conf)
-          # Thêm các cấu hình cần thiết, quan trọng nhất là loại bỏ các ví dụ mẫu (Example)
-          $ConfigPath = Join-Path -Path $ClamAVDir -ChildPath "freshclam.conf"
-          
-          # Ghi nội dung cơ bản vào tệp cấu hình, loại bỏ dòng "Example"
-          @("DatabaseOwner clamav", "UpdateLogFile C:\ProgramData\Chocolatey\lib\clamav\tools\freshclam.log") | Out-File -FilePath $ConfigPath -Encoding ASCII -Force
-          
-          # Chạy freshclam với đường dẫn cấu hình đã tạo
-          & "$ClamAVDir\freshclam" --config-file "$ConfigPath"
-        shell: powershell
-
-      - name: Scan ZIP and EXE for viruses
-        run: |
-          clamscan --infected --recursive --no-summary ./HiloPlugin.zip ./HiloPlugin.exe
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Virus detected! Aborting release."
-            exit 1
-          }
-        shell: powershell
+      - name: Scan ZIP and EXE for Viruses
+        uses: hugoalh/scan-virus-ghaction@v0.20.0
+        with:
+          git_ignores: |-
+            Param($GitCommitMeta)
+            Return (
+              $GitCommit.AuthorName -imatch '^dependabot' -or
+              ($GitCommit.AuthorDate -lt ([DateTime]::Parse('2022-01-01T00:00:00Z')) -and $GitCommit.AuthorName -imatch '^octocat$')
+            )
+          git_limit: 100
+          ignores_pre: |-
+            Param($ElementPreMeta)
+            Return ($Meta.Path -imatch '^node_modules[\\/]')
+          target: |-
+            ./HiloPlugin.zip
+            ./HiloPlugin.exe
 
       - name: Update Release
         uses: softprops/action-gh-release@v2
-        if: success() # Chỉ chạy nếu scan pass
+        if: success()
         with:
           tag_name: ${{ github.ref_name == 'PublishHttps' && 'https-latest' || github.ref_name == 'PublishHttp' && 'http-latest' || 'all-latest' }}
           files: |
