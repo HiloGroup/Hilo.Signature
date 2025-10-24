@@ -13,10 +13,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install ClamAV
+      - name: Install ClamAV and Get Config Path
         run: |
+          # Cài đặt ClamAV
           choco install clamav --force
-          freshclam
+          
+          # Tìm đường dẫn chính xác đến thư mục ClamAV được cài đặt
+          $ClamAVDir = Get-ChildItem -Path C:\ProgramData\Chocolatey\lib\clamav\tools | Select-Object -ExpandProperty FullName
+          
+          # Tạo một tệp cấu hình tạm thời (freshclam.conf)
+          # Thêm các cấu hình cần thiết, quan trọng nhất là loại bỏ các ví dụ mẫu (Example)
+          $ConfigPath = Join-Path -Path $ClamAVDir -ChildPath "freshclam.conf"
+          
+          # Ghi nội dung cơ bản vào tệp cấu hình, loại bỏ dòng "Example"
+          @("DatabaseOwner clamav", "UpdateLogFile C:\ProgramData\Chocolatey\lib\clamav\tools\freshclam.log") | Out-File -FilePath $ConfigPath -Encoding ASCII -Force
+          
+          # Chạy freshclam với đường dẫn cấu hình đã tạo
+          & "$ClamAVDir\freshclam" --config-file "$ConfigPath"
         shell: powershell
 
       - name: Scan ZIP and EXE for viruses
