@@ -3,9 +3,7 @@ name: Auto Release EXE
 on:
   push:
     branches:
-      - PublishHttps
-      - PublishHttp
-      - PublishAll
+      - Release
 
 jobs:
   create-release:
@@ -15,7 +13,7 @@ jobs:
       - name: Update Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name == 'PublishHttps' && 'https-latest' || github.ref_name == 'PublishHttp' && 'http-latest' || 'all-latest' }}
+          tag_name: 'latest'
           files: |
             ./HiloPlugin.zip
             ./HiloPlugin.exe
